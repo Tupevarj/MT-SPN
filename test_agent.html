@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Test POST with AJAX</title>
+</head>
+<body>
+    <input type=button id="send" value="Test POST Request">
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script>
+$("input#send").click(function(event) {
+    event.preventDefault();
+
+    var testData = {};
+    testData['sensors'] = ['123.123.123.123'];
+    testData['servers'] = ['88.88.88.88'];
+    $.ajax({
+        type: 'POST',
+        url: 'http://localhost:8080/update',
+        crossDomain: true,
+        data: JSON.stringify(testData),
+        dataType: 'json',
+        timeout: 3000
+    });
+});
+</script>
+</html>
