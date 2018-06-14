@@ -66,8 +66,11 @@ def start_http_server():
 
 def send_get_request(address):
     """ Sends HTTP request and return JSON parsed reply """
-    request = requests.get(address)
-    return request.json()
+    try:
+        request = requests.get(address)
+        return request.json()
+    except requests.exceptions.ConnectionError:
+        return None
 
 
 def keep_running():
@@ -76,9 +79,9 @@ def keep_running():
     if not stop_flag:
         threading.Timer(10.0, keep_running).start()
     random_ip = pick_random(parse_text_file('./servers.txt', ' '))
-    #parsed = send_get_request('http://' + random_ip + ':8080')  # Just to test http server (127.0.0.1 in servers.txt)
     parsed = send_get_request('http://' + random_ip + '/get_data')
-    append_line_to_text_file('payloads.txt', parsed['data'])
+    if not (parsed is None):
+        append_line_to_text_file('payloads.txt', parsed['data'])
 
 
 if __name__ == "__main__":
