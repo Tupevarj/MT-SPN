@@ -32,6 +32,18 @@ class ThreadPoolMixIn(ThreadingMixIn):
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
+            path_split = self.path.split('/')
+            
+            # If path matches 'get_data' then send some test data
+            if path_split[1] == 'get_data':
+
+                self.send_response(200)
+                self.send_header("Content-type", "text/html")
+                self.end_headers()
+                reply_data = 'HERE COMES SOME DATA'
+                data = json.dumps({'data': reply_data})
+                self.wfile.write(data.encode())
+                
             size = int(self.path.split('/')[1])
             self.send_response(200)
             self.end_headers()
@@ -39,6 +51,8 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(payload)
         except IOError:
             self.send_error(404,'File Not Found: %s' % self.path)
+        except ValueError:
+            self.send_error(404, 'Page Not Found: %s' % self.path)
 
 class ThreadedHTTPServer(ThreadPoolMixIn, HTTPServer):
     pass
