@@ -3,6 +3,8 @@ from SocketServer import ThreadingMixIn
 import os,  threading,  socket
 from Queue import Queue
 from time import time
+from random import *
+import string
 
 class ThreadPoolMixIn(ThreadingMixIn):
     numThreads = 100
@@ -39,7 +41,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header("Content-type", "text/html")
                 self.end_headers()
-                reply_data = 'HERE COMES SOME DATA'
+                # Reply with random string:
+                reply_data = "".join(choice(string.ascii_letters + string.punctuation) for x in range(0, 100))
                 data = json.dumps({'data': reply_data})
                 self.wfile.write(data.encode())
                 
