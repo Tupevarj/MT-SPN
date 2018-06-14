@@ -3,10 +3,11 @@ import threading
 from scp import SCPClient
 
 hostnames = ['192.168.56.11', '192.168.56.24']  # Sensor IPs
-stop_flag = False
+stop_flag = False  # Maybe to use in future?
 # counter = 0  # For testing ONLY!
 
 def create_SSH_connection(hostname, port, username, password):
+    """ Creates SSH connection. If success returns client, else None """
     try:
         client = paramiko.SSHClient()
         client.load_system_host_keys()
@@ -18,6 +19,7 @@ def create_SSH_connection(hostname, port, username, password):
         return None
 
 def send_file_through_SSH(file_name, client):
+    """ Send file through SSH connection using scp """
     scp = SCPClient(client.get_transport())
     scp.put(file_name)
 
@@ -28,6 +30,8 @@ def append_line_to_text_file(file_name, text):
     text_file.close()
 
 def keep_running():
+    """ Start timer that every 30 seconds, will take SSH connection to sensors
+        and transfers servers.txt file. """
     global counter
     if not stop_flag:
         threading.Timer(30.0, keep_running).start()
