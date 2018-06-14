@@ -30,12 +30,8 @@ class Server(BaseHTTPRequestHandler):
             try:
                 sensors = data["sensors"]
                 servers = data["servers"]
-
-                for sensor in sensors:
-                    append_line_to_text_file("sensors.txt", str(sensor))
-
-                for server in servers:
-                    append_line_to_text_file("servers.txt", str(server))
+                override_text_file("sensors.txt", sensors)
+                override_text_file("servers.txt", servers)
 
             except KeyError:
                 pass
@@ -81,6 +77,14 @@ def append_line_to_text_file(file_name, text):
     """ Appends .txt file by one line. """
     text_file = open(file_name, 'a+')
     text_file.write(str(text) + '\n')
+    text_file.close()
+
+    
+def override_text_file(file_name, lines):
+    """ Override .txt file """
+    text_file = open(file_name, 'w')
+    for line in lines:
+        text_file.write(str(line) + '\n')
     text_file.close()
 
 
