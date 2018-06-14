@@ -56,7 +56,7 @@ class Server(BaseHTTPRequestHandler):
 
         path_split = self.path.split('/')
 
-        if path_split[1] == '/status':
+        if path_split[1] == 'status':
             reply = 'i_am_good"'
             malware_file = Path("/home/ubuntu/malware.py")
             if malware_file.is_file():
@@ -64,7 +64,7 @@ class Server(BaseHTTPRequestHandler):
             self.append_log(reply)
             self.wfile.write(json.dumps(reply).encode())
 
-        elif path_split[1] == '/reset':
+        elif path_split[1] == 'reset':
             malware_file = Path("/home/ubuntu/malware.py")
             if malware_file.is_file():
                 os.remove("/home/ubuntu/malware.py")
