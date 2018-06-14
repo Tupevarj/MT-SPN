@@ -50,8 +50,8 @@ class Handler(BaseHTTPRequestHandler):
             #self.wfile.write(payload)
         except IOError:
             self.send_error(404,'File Not Found: %s' % self.path)
-        except ValueError:
-            self.send_error(404, 'Page Not Found: %s' % self.path)
+        #except ValueError:
+            #self.send_error(404, 'Page Not Found: %s' % self.path)
 
 class ThreadedHTTPServer(ThreadPoolMixIn, HTTPServer):
     pass
