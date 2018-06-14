@@ -7,12 +7,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 import json
 
-stop_flag = False
-
-#####################################################
-#   TEXT FILE READ/WRITE
-#####################################################
-
+stop_flag = False  # Maybe to use in future?
 
 def parse_text_file(file_name, regex):
     """ Parses .txt file. Returns list of elements, that
@@ -41,10 +36,6 @@ def pick_random(choices):
     return random.choice(choices)
 
 
-####################################################################################
-# START:    HTTP SERVER CODE
-####################################################################################
-
 class Server(BaseHTTPRequestHandler):
 
     def do_HEAD(s):
@@ -71,12 +62,7 @@ def start_http_server():
     except KeyboardInterrupt:
         pass
     http_server.server_close()
-
-
-#####################################################
-#   START THINGS HAPPENING AND KEEP GOING
-#####################################################
-
+    
 
 def send_get_request(address):
     """ Sends HTTP request and return JSON parsed reply """
@@ -90,25 +76,17 @@ def keep_running():
     if not stop_flag:
         threading.Timer(10.0, keep_running).start()
     random_ip = pick_random(parse_text_file('./servers.txt', ' '))
-    parsed = send_get_request('http://' + random_ip + ':8080')  # Just to test http server (127.0.0.1 in servers.txt)
-    #parsed = send_get_request('http://'+ random_ip+'/get_data')
+    #parsed = send_get_request('http://' + random_ip + ':8080')  # Just to test http server (127.0.0.1 in servers.txt)
+    parsed = send_get_request('http://' + random_ip + '/get_data')
     append_line_to_text_file('payloads.txt', parsed['data'])
 
 
-########################
-# START HTTP SERVER:
-########################
+if __name__ == "__main__":
+    # Start running
+    thread_http = Thread(target=start_http_server)
+    thread_http.start()
+    keep_running()
 
-thread_http = Thread(target=start_http_server)
-thread_http.start()
-
-keep_running()
-
-
-########################
-# CLEANING UP:
-########################
-
-thread_http.join()
-http_server.server_close()
-
+    # Clean up:
+    thread_http.join()
+    http_server.server_close()
