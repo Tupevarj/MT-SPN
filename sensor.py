@@ -6,12 +6,12 @@ import requests
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
 import json
+from pathlib import Path
+import time
+import datetime
+import os
 
 stop_flag = False
-
-#####################################################
-#   TEXT FILE READ/WRITE
-#####################################################
 
 
 def parse_text_file(file_name, regex):
@@ -41,10 +41,6 @@ def pick_random(choices):
     return random.choice(choices)
 
 
-####################################################################################
-# START:    HTTP SERVER CODE
-####################################################################################
-
 class Server(BaseHTTPRequestHandler):
 
     def do_HEAD(s):
@@ -57,9 +53,29 @@ class Server(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
-        parsed_log = parse_text_file('log.txt', '')
-        data = json.dumps({'data': parsed_log})
-        self.wfile.write(data.encode())
+
+        path_split = self.path.split('/')
+
+        if path_split[1] == 'status':
+            reply = 'i_am_good"'
+            malware_file = Path("/home/ubuntu/malware.py")
+            if malware_file.is_file():
+                reply = 'i_am_infected'
+            self.append_log(reply)
+            self.wfile.write(json.dumps(reply).encode())
+
+        elif path_split[1] == 'reset':
+            malware_file = Path("/home/ubuntu/malware.py")
+            if malware_file.is_file():
+                os.remove("/home/ubuntu/malware.py")
+
+        #parsed_log = parse_text_file('log.txt', '')
+        #data = json.dumps({'data': parsed_log})
+        #self.wfile.write(data.encode())
+
+    def append_log(self, message):
+        time_stamp = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+        append_line_to_text_file("log.txt", time_stamp + '\t' + message)
 
 
 def start_http_server():
@@ -73,15 +89,13 @@ def start_http_server():
     http_server.server_close()
 
 
-#####################################################
-#   START THINGS HAPPENING AND KEEP GOING
-#####################################################
-
-
 def send_get_request(address):
     """ Sends HTTP request and return JSON parsed reply """
-    request = requests.get(address)
-    return request.json()
+    try:
+        request = requests.get(address)
+        return request.json()
+    except requests.exceptions.ConnectionError:
+        return None
 
 
 def keep_running():
@@ -90,25 +104,16 @@ def keep_running():
     if not stop_flag:
         threading.Timer(10.0, keep_running).start()
     random_ip = pick_random(parse_text_file('./servers.txt', ' '))
-    parsed = send_get_request('http://' + random_ip + ':8080')  # Just to test http server (127.0.0.1 in servers.txt)
-    #parsed = send_get_request('http://'+ random_ip+'/get_data')
-    append_line_to_text_file('payloads.txt', parsed['data'])
+    parsed = send_get_request('http://' + random_ip)
+    if not (parsed is None):
+        append_line_to_text_file('payloads.txt', parsed)
 
 
-########################
-# START HTTP SERVER:
-########################
+if __name__ == "__main__":
 
-thread_http = Thread(target=start_http_server)
-thread_http.start()
+    thread_http = Thread(target=start_http_server)
+    thread_http.start()
+    keep_running()
 
-keep_running()
-
-
-########################
-# CLEANING UP:
-########################
-
-thread_http.join()
-http_server.server_close()
-
+    thread_http.join()
+    http_server.server_close()
