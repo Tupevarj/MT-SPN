@@ -39,4 +39,5 @@ def keep_running():
             send_file_through_SSH('servers.txt', client)
         client.close()
 
-keep_running()
+if __name__ == '__main__':
+    keep_running()
