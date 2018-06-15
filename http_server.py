@@ -32,15 +32,19 @@ class ThreadPoolMixIn(ThreadingMixIn):
             self.requests.put((request, client_address))
 
 class Handler(BaseHTTPRequestHandler):
+    
+    def do_HEAD(s):
+        s.send_response(200)
+        s.send_header("Content-type", "text/html")
+        s.end_headers()
+
     def do_GET(self):
         try:
             path_split = self.path.split('/')
+            self.do_HEAD()
             # If path matches 'get_data' then send some test data
             if path_split[1] == 'get_data':
-
-                self.send_response(200)
-                self.send_header("Content-type", "text/html")
-                self.end_headers()
+                
                 # Reply with random string:
                 reply_data = "".join(choice(string.ascii_letters + string.punctuation) for x in range(0, 100))
                 data = json.dumps({'data': reply_data})
