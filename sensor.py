@@ -69,6 +69,7 @@ class Server(BaseHTTPRequestHandler):
             if malware_file.is_file():
                 os.remove("/home/ubuntu/malware.py")
 
+        self.do_HEAD()
         #parsed_log = parse_text_file('log.txt', '')
         #data = json.dumps({'data': parsed_log})
         #self.wfile.write(data.encode())
