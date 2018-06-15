@@ -42,7 +42,7 @@ class Server(BaseHTTPRequestHandler):
 def start_http_server():
     """" Starts HTTP server """
     global http_server
-    http_server = HTTPServer(('127.0.0.1', 8080), Server)
+    http_server = HTTPServer(('', 8080), Server)
     try:
         http_server.serve_forever()
     except KeyboardInterrupt:
