@@ -18,9 +18,7 @@ class Server(BaseHTTPRequestHandler):
 
     def do_POST(self):
         """Respond to a POST request."""
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
+        self.do_HEAD()
 
         path_split = self.path.split('/')
         if path_split[1] == 'update':
