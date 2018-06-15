@@ -36,9 +36,7 @@ class Server(BaseHTTPRequestHandler):
 
     def do_GET(self):
         """Respond to a GET request."""
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
+        self.do_HEAD()
 
 
 def start_http_server():
