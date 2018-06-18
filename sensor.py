@@ -113,7 +113,7 @@ def keep_running():
 if __name__ == "__main__":
 
     thread_http = Thread(target=start_http_server)
-    thread_http.getDaemon(1)
+    thread_http.setDaemon(1)
     thread_http.start()
     keep_running()
 
