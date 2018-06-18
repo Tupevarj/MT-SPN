@@ -61,15 +61,13 @@ class Server(BaseHTTPRequestHandler):
             malware_file = Path("/home/ubuntu/malware.py")
             if malware_file.is_file():
                 reply['status'] = "i_am_infected"
-            self.append_log(reply)
+            self.append_log(reply['status'])
             self.wfile.write(json.dumps(reply).encode())
 
         elif path_split[1] == 'reset':
             malware_file = Path("/home/ubuntu/malware.py")
             if malware_file.is_file():
                 os.remove("/home/ubuntu/malware.py")
-
-        self.do_HEAD()
         #parsed_log = parse_text_file('log.txt', '')
         #data = json.dumps({'data': parsed_log})
         #self.wfile.write(data.encode())
@@ -99,23 +97,25 @@ def send_get_request(address):
         return None
 
 
-def keep_running():
-    """ Keeps sending GET request every 10 seconds to random ip from servers.txt file.
+def keep_running(interval):
+    	""" Keeps sending GET request every 10 seconds to random ip from servers.txt file.
         Reply is stored in payloads.txt"""
-    if not stop_flag:
-        threading.Timer(10.0, keep_running).start()
-    random_ip = pick_random(parse_text_file('./servers.txt', ' '))
-    parsed = send_get_request('http://' + random_ip)
-    if not (parsed is None):
-        append_line_to_text_file('payloads.txt', parsed)
-
+	try:
+    		while True:
+    			random_ip = pick_random(parse_text_file('./servers.txt', ' '))
+    			parsed = send_get_request('http://' + random_ip)
+    			if not (parsed is None):
+        			append_line_to_text_file('payloads.txt', parsed)
+			time.sleep(interval)			
+	except KeyboardInterrupt:
+    		pass
 
 if __name__ == "__main__":
 
     thread_http = Thread(target=start_http_server)
     thread_http.setDaemon(1)
     thread_http.start()
-    keep_running()
+    keep_running(10)
 
-    thread_http.join()
-    http_server.server_close()
+#    thread_http.join()
+#    http_server.server_close()
