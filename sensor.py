@@ -93,7 +93,7 @@ def start_http_server():
 def send_get_request(address):
     """ Sends HTTP request and return JSON parsed reply """
     try:
-        request = requests.get(address)
+        request = requests.get(address + '/get_data')
         return request.json()
     except requests.exceptions.ConnectionError:
         return None
