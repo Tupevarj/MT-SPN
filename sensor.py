@@ -57,10 +57,10 @@ class Server(BaseHTTPRequestHandler):
         path_split = self.path.split('/')
 
         if path_split[1] == 'status':
-            reply = 'i_am_good"'
+            reply = {"status": "i_am_good"}
             malware_file = Path("/home/ubuntu/malware.py")
             if malware_file.is_file():
-                reply = 'i_am_infected'
+                reply['status'] = "i_am_infected"
             self.append_log(reply)
             self.wfile.write(json.dumps(reply).encode())
 
