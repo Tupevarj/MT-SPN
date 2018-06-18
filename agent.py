@@ -1,13 +1,10 @@
-import sys, paramiko
-import threading
+import sys, paramiko, threading, json, time
 from scp import SCPClient
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from threading import Thread
-import json
 
-hostnames = ['192.168.56.11', '192.168.56.24']  # Sensor IPs
-stop_flag = False  # Maybe to use in future?
-
+#hostnames = ['192.168.56.11', '192.168.56.24']  # Sensor IPs
+#stop_flag = False  # Maybe to use in future?
 
 class Server(BaseHTTPRequestHandler):
 
@@ -19,17 +16,23 @@ class Server(BaseHTTPRequestHandler):
     def do_POST(self):
         """Respond to a POST request."""
         self.do_HEAD()
-
-        path_split = self.path.split('/')
-        if path_split[1] == 'update':
+        if self.path.endswith('update_sensors'):
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data)
             try:
                 sensors = data["sensors"]
-                servers = data["servers"]
                 override_text_file("sensors.txt", sensors)
-                override_text_file("servers.txt", servers)
+
+            except KeyError:
+                pass
+        elif self.path.endswith('update_servers'):
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
+            try:
+                sensors = data["servers"]
+                override_text_file("servers.txt", sensors)
 
             except KeyError:
                 pass
@@ -54,12 +57,13 @@ def create_SSH_connection(hostname, port, username, password):
     """ Creates SSH connection. If success returns client, else None """
     try:
         client = paramiko.SSHClient()
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.WarningPolicy)
-
+        #client.load_system_host_keys()
+        #client.set_missing_host_key_policy(paramiko.WarningPolicy)
+	client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(hostname, port=port, username=username, password=password)
         return client
-    except:
+    except Exception as e:
+	print e
         return None
 
 
@@ -84,25 +88,37 @@ def override_text_file(file_name, lines):
     text_file.close()
 
 
-def keep_running():
-    """ Start timer that every 30 seconds, will take SSH connection to sensors
+def keep_running(interval):
+    	""" Start timer that every <interval> seconds, will take SSH connection to sensors
         and transfers servers.txt file. """
-    global counter
-    if not stop_flag:
-        threading.Timer(30.0, keep_running).start()
-    for host in hostnames:
-        client = create_SSH_connection(host, 22, 'ubuntu', 'ubuntu')
-        if not (client is None):
-            send_file_through_SSH('servers.txt', client)
-        client.close()
+    	#global counter
+    	#if not stop_flag:
+        	#threading.Timer(30.0, keep_running).start()
+    	try:
+    		while True:
+			try:
+				with open('sensors.txt','r') as f:
+					lines = f.readlines()
+	    			for line in lines:
+					host = line.strip()
+				        client = create_SSH_connection(host, 22, 'ubuntu', 'ubuntu')
+			        	if client:
+			            		send_file_through_SSH('servers.txt', client)
+			        	client.close()
+			except:
+				print("File 'sensors.txt is missing")
+			time.sleep(interval)			
+	except KeyboardInterrupt:
+    		pass
+
 
 
 if __name__ == '__main__':
 
     thread_http = Thread(target=start_http_server)
-    thread_http.start()
     thread_http.setDaemon(1)
-    keep_running()
+    thread_http.start()
+    keep_running(30)
 
-    thread_http.join()
-    http_server.server_close()
+    #thread_http.join()
+    #http_server.server_close()
