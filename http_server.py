@@ -145,6 +145,7 @@ if __name__ == '__main__':
     print ('Starting server, use <Ctrl-C> to stop')
 
     thread_server_sensors = Thread(target=start_sensors_server)
+    thread_server_sensors.setDaemon(1)
     thread_server_sensors.start()
 
     server_control.serve_forever()
