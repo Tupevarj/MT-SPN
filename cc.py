@@ -122,6 +122,7 @@ if __name__ == '__main__':
     zombie_server = ThreadedHTTPServer(('', 8080), Handler)
 
     thread_server_zombie = Thread(target=zombie_server.serve_forever)
+    thread_server_zomibe.setDaemon(1)
     thread_server_zombie.start()
 
     control_server.serve_forever()
