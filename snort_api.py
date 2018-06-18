@@ -70,14 +70,27 @@ class Handler(BaseHTTPRequestHandler):
 	def do_GET(self):
         	try:
 			path_items = self.path.split('/')
-            		ip = path_items[1]
-            		port = path_items[2]
-            		time_interval = path_items[3]
-			alerts = self.get_alerts(ip,port,time_interval)
-            		self.send_response(200)
-            		self.end_headers()
-			data = json.dumps(alerts)
-		        self.wfile.write(data.encode())
+			if path_items[1] == 'get_alerts':
+	            		ip = path_items[2]
+        	    		port = path_items[3]
+	            		time_interval = path_items[4]
+				alerts = self.get_alerts(ip,port,time_interval)
+            			self.send_response(200)
+            			self.end_headers()
+				data = json.dumps(alerts)
+			        self.wfile.write(data.encode())
+			elif path_items[1] == 'get_rules':
+            			self.send_response(200)
+            			self.end_headers()
+				with open('/etc/snort/rules/local.rules','r') as f:
+					lines = f.readlines()
+				rules = {"rules": []}
+				print rules
+				for line in lines:
+					if line.startswith('alert'):
+						rules['rules'].append(line.strip())
+				data = json.dumps(rules)
+			        self.wfile.write(data.encode())
         	except IOError:
             		self.send_error(404,'File Not Found: %s' % self.path)
 
