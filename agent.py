@@ -118,12 +118,7 @@ if __name__ == '__main__':
     thread_http = Thread(target=start_http_server)
     thread_http.setDaemon(1)
     thread_http.start()
-<<<<<<< HEAD
     keep_running(30)
-=======
-    thread_http.setDaemon(1)
-    keep_running()
->>>>>>> 1e96912668328b6b20051d9bf3a156fb1ced9a81
 
     #thread_http.join()
     #http_server.server_close()
