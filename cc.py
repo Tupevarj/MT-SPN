@@ -102,6 +102,7 @@ class ControlHandler(BaseHTTPRequestHandler):
 	        content_length = int(self.headers['Content-Length'])
         	post_data = self.rfile.read(content_length)
 	        data = json.loads(post_data)
+		print data
         	if self.path.endswith('bots'):
             		bots = []
 		        try:
@@ -116,7 +117,7 @@ class ControlHandler(BaseHTTPRequestHandler):
             		try:
                 		with open('commands.txt', 'w') as f:
                     			commands = data["commands"]
-                        		f.write(commands)
+                        		f.write(json.dumps(commands))
             		except IOError:
                 		self.send_error(404, 'File Not Found: %s' % self.path)
 
