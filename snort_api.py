@@ -63,9 +63,25 @@ class Handler(BaseHTTPRequestHandler):
 									alerts["alerts"].append(potential_alert)
 							except Exception, e:
 								print e
-								
-				
 		return alerts
+
+	def get_rules(self):
+		with open('/etc/snort/rules/local.rules','r') as f:
+			lines = f.readlines()
+		rules = {"rules": []}
+		for line in lines:
+			if line.startswith('alert'):
+				rules['rules'].append(line.strip())
+							
+				
+		return rules
+	
+	def update_rules(self,rules)
+		with open('/etc/snort/rules/local.rules','w') as f:
+			for rule in rules['rules']:
+				f.write(rule + '\n')
+							
+		return 0
 
 	def do_GET(self):
         	try:
@@ -79,20 +95,28 @@ class Handler(BaseHTTPRequestHandler):
             			self.end_headers()
 				data = json.dumps(alerts)
 			        self.wfile.write(data.encode())
+
 			elif path_items[1] == 'get_rules':
             			self.send_response(200)
             			self.end_headers()
-				with open('/etc/snort/rules/local.rules','r') as f:
-					lines = f.readlines()
-				rules = {"rules": []}
-				print rules
-				for line in lines:
-					if line.startswith('alert'):
-						rules['rules'].append(line.strip())
+				rules = self.get_rules()
 				data = json.dumps(rules)
 			        self.wfile.write(data.encode())
+			
         	except IOError:
             		self.send_error(404,'File Not Found: %s' % self.path)
+	
+	def do_POST(self):
+		try:
+			path_items = self.path.split('/')
+			if path_items[1] == 'update_rules':
+				content_length = int(self.headers['Content-Length'])
+		            	post_data = self.rfile.read(content_length)
+        		    	rules = json.loads(post_data)
+				update_rules(rules)
+        	except IOError:
+            		self.send_error(404,'File Not Found: %s' % self.path)
+		
 
 class ThreadedHTTPServer(ThreadPoolMixIn, HTTPServer):
     pass
