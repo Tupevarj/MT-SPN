@@ -62,7 +62,7 @@ class RequestCounter:
         self.update_counter()
         return len(self.list_counts)
 
-    def __init__(self, count_timeout=10):
+    def __init__(self, count_timeout=60):
         self.list_counts = list()
         self.count_timeout = count_timeout
 
@@ -115,7 +115,7 @@ class HandlerControl(BaseHTTPRequestHandler):
 
             if path_split[1] == 'connections':
                 count = request_counter.get_count()
-                data = json.dumps(count)
+                data = json.dumps({"connections": float(count)/60})
                 self.wfile.write(data.encode())
 
         except IOError:
@@ -139,7 +139,7 @@ def start_sensors_server():
 
 
 if __name__ == '__main__':
-    request_counter = RequestCounter(count_timeout=10)
+    request_counter = RequestCounter(count_timeout=60)
 
     server_control = ThreadedHTTPServer(('', 8080), HandlerControl)
     print ('Starting server, use <Ctrl-C> to stop')
