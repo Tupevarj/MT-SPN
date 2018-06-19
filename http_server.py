@@ -115,7 +115,7 @@ class HandlerControl(BaseHTTPRequestHandler):
 
             if path_split[1] == 'connections':
                 count = request_counter.get_count()
-                data = json.dumps({"connections": float(count)/60})
+                data = json.dumps({"connections": count})
                 self.wfile.write(data.encode())
 
         except IOError:
