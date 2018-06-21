@@ -8,28 +8,6 @@ odl_ns = {'i': 'urn:opendaylight:inventory', 'f': 'urn:opendaylight:flow:invento
           's': 'urn:opendaylight:flow:statistics'}
 
 
-def get_virtual_machines_data_statistics(mac_address):
-    """ Returns send/received bytes and packets counts in dictionary for <mac_address> """
-    nodes = request_tree(url='http://130.234.169.76:8181/restconf/operational/opendaylight-inventory:nodes', username='admin', psw='admin')
-    vm_data_stats = {"sent-packet-count" : 0, "sent-byte-count": 0, "received-packet-count": 0, "received-byte-count": 0}
-
-    # - Flows with <mac_address> as ethernet-source
-    source_flows = xpath_query(nodes, '//f:flow[./f:match/f:ethernet-match/f:ethernet-source/f:address = "' + mac_address + '"]')
-
-    for sf in source_flows:
-        vm_data_stats["sent-packet-count"] += int(xpath_query(sf, './s:flow-statistics/s:packet-count')[0].text)
-        vm_data_stats["sent-byte-count"] += int(xpath_query(sf, './s:flow-statistics/s:byte-count')[0].text)
-
-    # - Flows with <mac_address> as ethernet-destination
-    destination_flows = xpath_query(nodes, '//f:flow[./f:match/f:ethernet-match/f:ethernet-destination/f:address = "' + mac_address + '"]')
-
-    for df in destination_flows:
-        vm_data_stats["received-packet-count"] += int(xpath_query(sf, './s:flow-statistics/s:packet-count')[0].text)
-        vm_data_stats["received-byte-count"] += int(xpath_query(sf, './s:flow-statistics/s:byte-count')[0].text)
-
-    return vm_data_stats
-
-
 def request_tree(url, username, psw):
     """ Returns etree from url """
     tree_req = requests.get(url,
@@ -80,8 +58,3 @@ def get_virtual_machines_info():
 if __name__ == '__main__':
 
     virtual_machines_info = get_virtual_machines_info()
-    for vm in virtual_machines_info:
-        statistics = get_virtual_machines_data_statistics(vm['MAC'])
-        print("IP:", vm['IP'], "MAC: ", vm['MAC'], statistics)
-    print(virtual_machines_info)
-    i = 0
