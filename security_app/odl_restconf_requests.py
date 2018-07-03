@@ -8,8 +8,8 @@ class Operational():
         't': 'urn:TBD:params:xml:ns:yang:network-topology', 
         'o': 'urn:opendaylight:params:xml:ns:yang:ovsdb', 
         'n': 'urn:opendaylight:inventory', 
-        'f': 'urn:opendaylight:flow:inventory', 
-    }
+        'f': 'urn:opendaylight:flow:inventory',
+        's': 'urn:opendaylight:flow:statistics'}
         
     xpath = {
         'tp': '//t:topology/t:node/t:termination-point', 
@@ -79,6 +79,21 @@ class Operational():
             remote_node_id = nodes_root.xpath(self.xpath['node_id_by_nc_name'], nc_name=tp_tun_names[k], namespaces=self.ns)[0]
             tunnels.append({'name': tp_tun_names[i], 'mac': tp_tun_macs[i], 'local': { 'node': node_id,  'port': tp_tun_ports[i],  'ip': tp_tun_local_ips[i]},  'remote': {'node': remote_node_id,  'port': tp_tun_ports[k],  'ip': tp_tun_remote_ips[i]}})
         return tunnels
+    
+    
+    def get_external_traffic_count(self, floating_ip):
+        """ Try's to find unique SNAT source/destination flows and gets data traffic based
+            on unique SNAT flows. """
+        nodes_root = self.get_xml_root(self.nodes)
+        # Snat source/destination flows:
+        snat_source = nodes_root.xpath(self.xpath['flow'] + '[./f:match/f:ipv4-source/text() = "' + floating_ip + '"]', namespaces=self.ns)[0]
+        snat_destination = nodes_root.xpath(self.xpath['flow'] + '[./f:match/f:ipv4-destination/text() = "' + floating_ip + '" and ./f:instructions/f:instruction/f:apply-actions/f:action/f:set-field/f:ipv4-destination/text() and not(./f:instructions/f:instruction/f:apply-actions/f:action/f:set-field/f:ethernet-match)]', namespaces=self.ns)[0]
+
+        return {'ip': floating_ip, 'sent_packets': int(snat_source.xpath('./s:flow-statistics/s:packet-count', namespaces=self.ns)[0].text),
+                'sent_bytes': int(snat_source.xpath('./s:flow-statistics/s:byte-count', namespaces=self.ns)[0].text), 'received_packets':
+                int(snat_destination.xpath('./s:flow-statistics/s:packet-count', namespaces=self.ns)[0].text),
+                'received_bytes': int(snat_destination.xpath('./s:flow-statistics/s:byte-count', namespaces=self.ns)[0].text)}
+    
 
 if __name__ == '__main__':
     op = Operational('130.234.169.76',8181,'admin','admin')
