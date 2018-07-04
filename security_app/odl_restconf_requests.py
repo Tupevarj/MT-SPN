@@ -166,7 +166,6 @@ class Operational():
                                                          (elapsed_time_ms / 1000.0))
                 change_external = self.change_in_traffic(self.traffic_cache[mac_address]['external'], external_traffic,
                                                          (elapsed_time_ms / 1000.0))
-                print "Elapsed time: ", elapsed_time_ms
             else:
                 return None  # Unreliable result
         else:
