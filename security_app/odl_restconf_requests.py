@@ -123,7 +123,6 @@ class Operational():
     def get_internal_traffic_count(self, mac_address, ip_address, nodes_root):
         """ Try's to find unique destination flow and total traffic source flow for local ip address
             and gets data traffic based those flows. """
-        nodes_root = self.get_xml_root(self.nodes)
 
         destination_flows = nodes_root.xpath('//f:flow[./f:match/f:ethernet-match/f:ethernet-destination/f:address = "' + mac_address + '" and ./f:match/f:metadata and not(./f:instructions/f:instruction/f:apply-actions/f:action/f:set-field/f:tunnel)]', namespaces=self.ns)
         source_flows = nodes_root.xpath('//f:flow[./f:match/f:ethernet-match/f:ethernet-source/f:address = "' + mac_address + '" and ./f:match/f:ipv4-source and ./f:match/f:metadata and ./f:instructions/f:instruction/f:go-to-table]', namespaces=self.ns)
