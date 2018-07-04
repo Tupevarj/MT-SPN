@@ -1,5 +1,5 @@
 from odl_restconf_requests import Operational
-
+import threading
 
 class FlowMonitor:
 
@@ -7,6 +7,7 @@ class FlowMonitor:
         self.op = Operational('130.234.169.76', 8181, 'admin', 'admin')
         self.vm_cache = dict()
         self.traffic_cache = dict()
+        self.m_running = False
 
     def update_vm_list(self):
         """ Updates VM ip and floating ip addresses cache. """
@@ -16,44 +17,31 @@ class FlowMonitor:
                 self.vm_cache[vm['mac']] = {'ip': vm['ip'], 'floating_ip': vm['floating_ip']}
 
     @staticmethod
-    def change_in_traffic(previous, current):
+    def change_in_traffic(previous, current, divider=1):
         """ Calculates change in to data traffic dictionaries. """
-        return {'ip': current['ip'], 'sent_packets': current['sent_packets'] - previous['sent_packets'], 'sent_bytes':
-                current['sent_bytes'] - previous['sent_bytes'], 'received_packets': current['received_packets'] -
-                previous['received_packets'], 'received_bytes': current['received_bytes'] - previous['received_bytes']}
+        return {'ip': current['ip'], 'sent_packets': (current['sent_packets'] - previous['sent_packets']) / divider, 'sent_bytes':
+            (current['sent_bytes'] - previous['sent_bytes']) / divider, 'received_packets': (current['received_packets'] -
+                previous['received_packets']) / divider, 'received_bytes': (current['received_bytes'] - previous['received_bytes']) / divider}
 
     @staticmethod
     def empty_traffic(ip_address):
         """ Initializes empty data traffic dictionary using <ip_address>. """
-        return {'ip': ip_address, 'sent_packets': 0, 'sent_bytes': 0, 'received_packets': 0, 'received_bytes': 0 }
+        return {'ip': ip_address, 'sent_packets': 0, 'sent_bytes': 0, 'received_packets': 0, 'received_bytes': 0}
 
-    def get_traffic(self, mac_address):
-        """ Gets data traffic for <mac_address>. """
-        if mac_address not in self.vm_cache:
-            self.update_vm_list()
+    def print_data_traffic(self):
+        rates = self.op.get_traffic_rates()
+        for key, value in rates.items():
+            print (value)
+        print("----------------------------------------------------------------")
 
-        try:
-            floating_ip = self.vm_cache[mac_address]['floating_ip']
-            ip = self.vm_cache[mac_address]['ip']
-        except KeyError:
-            print("Error, MAC address not recognized!")
-            return
+    def keep_monitoring(self, interval):
+        if self.m_running:
+            threading.Timer(interval, self.print_data_traffic, interval).start()
+        self.print_data_traffic()
 
-        internal_traffic = self.op.get_internal_traffic_count(mac_address, ip)
-        external_traffic = self.op.get_external_traffic_count(floating_ip)
+    def start_monitoring(self, interval=5.0):
+        self.m_running = True
+        self.keep_monitoring(interval)
 
-        # Subtract external source traffic from internal source traffic:
-        internal_traffic['sent_bytes'] = internal_traffic['sent_bytes'] - external_traffic['sent_bytes']
-        internal_traffic['sent_packets'] = internal_traffic['sent_packets'] - external_traffic['sent_packets']
-
-        if mac_address in self.traffic_cache:
-            change_internal = self.change_in_traffic(self.traffic_cache[mac_address]['internal'], internal_traffic)
-            change_external = self.change_in_traffic(self.traffic_cache[mac_address]['external'], external_traffic)
-        else:
-            change_internal = self.empty_traffic(ip)
-            change_external = self.empty_traffic(floating_ip)
-
-        self.traffic_cache[mac_address] = {'internal': internal_traffic, 'external': external_traffic}
-        
-        return {'internal': change_internal, 'external': change_external}
-        
+    def stop_monitoring(self):
+        self.m_running = False
