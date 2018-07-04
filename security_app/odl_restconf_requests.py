@@ -149,8 +149,13 @@ class Operational():
             if vm['mac'] not in self.vm_cache:
                 self.vm_cache[vm['mac']] = {'ip': vm['ip'], 'floating_ip': vm['floating_ip']}
 
-    def get_traffic_rate(self, mac_address, floating_ip, ip, nodes_root, current_time_ms):
+   def get_traffic_rate(self, mac_address, floating_ip, ip, nodes_root, current_time_ms):
         """ Gets data traffic for <mac_address>. """
+
+        if mac_address in self.traffic_cache:
+            elapsed_time_ms = current_time_ms - self.traffic_cache[mac_address]['time_stamp']
+            if elapsed_time_ms < self.elapsed_time_ms_lb:
+                return None  # Unreliable result
 
         internal_traffic = self.get_internal_traffic_count(mac_address, ip, nodes_root)
         external_traffic = self.get_external_traffic_count(floating_ip, nodes_root)
@@ -161,13 +166,10 @@ class Operational():
 
         if mac_address in self.traffic_cache:
             elapsed_time_ms = current_time_ms - self.traffic_cache[mac_address]['time_stamp']
-            if elapsed_time_ms > self.elapsed_time_ms_lb:  # Lower bound for rate calculations (Otherwise not very unreliable results)
-                change_internal = self.change_in_traffic(self.traffic_cache[mac_address]['internal'], internal_traffic,
+            change_internal = self.change_in_traffic(self.traffic_cache[mac_address]['internal'], internal_traffic,
                                                          (elapsed_time_ms / 1000.0))
-                change_external = self.change_in_traffic(self.traffic_cache[mac_address]['external'], external_traffic,
+            change_external = self.change_in_traffic(self.traffic_cache[mac_address]['external'], external_traffic,
                                                          (elapsed_time_ms / 1000.0))
-            else:
-                return None  # Unreliable result
         else:
             change_internal = self.empty_traffic(ip)
             change_external = self.empty_traffic(floating_ip)
