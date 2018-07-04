@@ -29,7 +29,7 @@ class FlowMonitor:
         """ Initializes empty data traffic dictionary using <ip_address>. """
         return {'ip': ip_address, 'sent_packets': 0, 'sent_bytes': 0, 'received_packets': 0, 'received_bytes': 0}
 
-     def print_data_traffic(self):
+      def print_data_traffic(self):
         if not self.ready:
             return
         self.ready = False
@@ -37,9 +37,14 @@ class FlowMonitor:
         for key, value in rates.items():
             if value:
                 print "-------------------------------------------------------------------------------------------"
-                print "Floating IP", value['external']['ip'], "                       Local IP", value['internal']['ip']
-                print "    Sent: ", round(value['external']['sent_packets'], 2), " pack/s and ", round(value['external']['sent_bytes'], 2), " bytes/s.", "        ", round(value['internal']['sent_packets'], 2), " pack/s and ", round(value['internal']['sent_bytes'], 2), " bytes/s."
-                print "Received: ", round(value['external']['received_packets'], 2), " pack/s and ", round(value['external']['received_bytes'], 2), " bytes/s.", "        ",  round(value['internal']['received_packets'], 2), " pack/s and ", round(value['internal']['received_bytes'], 2), " bytes/s."
+                title_floating = "Floating IP " + value['external']['ip']
+                print title_floating + " " * (52 - len(title_floating)) + "Local IP " + value['internal']['ip']
+                sent_external = "    Sent: " + str(round(value['external']['sent_packets'], 2)) + " pack/s and " + str(round(value['external']['sent_bytes'], 2)) + " bytes/s."
+                sent_internal = str(round(value['internal']['sent_packets'], 2)) + " pack/s and " + str(round(value['internal']['sent_bytes'], 2)) + " bytes/s."
+                recv_external = "Received: " + str(round(value['external']['sent_packets'], 2)) + " pack/s and " + str(round(value['external']['sent_bytes'], 2)) + " bytes/s."
+                recv_internal = str(round(value['internal']['sent_packets'], 2)) + " pack/s and " + str(round(value['internal']['sent_bytes'], 2)) + " bytes/s."
+                print sent_external + " " * (52 - len(sent_external)) + sent_internal
+                print recv_external + " " * (52 - len(recv_external)) + recv_internal
         self.ready = True
 
     def keep_monitoring(self, interval):
