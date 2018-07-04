@@ -81,11 +81,10 @@ class Operational():
             remote_node_id = nodes_root.xpath(self.xpath['node_id_by_nc_name'], nc_name=tp_tun_names[k], namespaces=self.ns)[0]
             tunnels.append({'name': tp_tun_names[i], 'mac': tp_tun_macs[i], 'local': { 'node': node_id,  'port': tp_tun_ports[i],  'ip': tp_tun_local_ips[i]},  'remote': {'node': remote_node_id,  'port': tp_tun_ports[k],  'ip': tp_tun_remote_ips[i]}})
         return tunnels
-    
-    def get_external_traffic_count(self, floating_ip):
+
+    def get_external_traffic_count(self, floating_ip, nodes_root):
         """ Try's to find unique SNAT source/destination flows and gets data traffic based
             on unique SNAT flows. """
-        nodes_root = self.get_xml_root(self.nodes)
         # Snat source/destination flows:
         snat_source = nodes_root.xpath(self.xpath['flow'] + '[./f:match/f:ipv4-source/text() = "' + floating_ip + '"]', namespaces=self.ns)[0]
         snat_destination = nodes_root.xpath(self.xpath['flow'] + '[./f:match/f:ipv4-destination/text() = "' + floating_ip + '" and ./f:instructions/f:instruction/f:apply-actions/f:action/f:set-field/f:ipv4-destination/text() and not(./f:instructions/f:instruction/f:apply-actions/f:action/f:set-field/f:ethernet-match)]', namespaces=self.ns)[0]
@@ -121,7 +120,7 @@ class Operational():
         """ Initializes empty data traffic dictionary using <ip_address>. """
         return {'ip': ip_address, 'sent_packets': 0, 'sent_bytes': 0, 'received_packets': 0, 'received_bytes': 0}
 
-    def get_internal_traffic_count(self, mac_address, ip_address):
+    def get_internal_traffic_count(self, mac_address, ip_address, nodes_root):
         """ Try's to find unique destination flow and total traffic source flow for local ip address
             and gets data traffic based those flows. """
         nodes_root = self.get_xml_root(self.nodes)
@@ -133,9 +132,9 @@ class Operational():
         destination_flow = destination_flows[0]
 
         if len(destination_flows) > 1:
-            destination_flow = self.get_highest_priority(destination_flows)
+            destination_flow = destination_flows[1] #self.get_highest_priority(destination_flows)
         if len(source_flows) > 1:
-            source_flow = self.get_highest_priority(source_flows)
+            source_flow = source_flows[1] # self.get_highest_priority(source_flows)
 
         return {'ip': ip_address,
                 'sent_packets': int(source_flow.xpath(self.xpath['packet_count'], namespaces=self.ns)[0].text),
@@ -150,11 +149,11 @@ class Operational():
             if vm['mac'] not in self.vm_cache:
                 self.vm_cache[vm['mac']] = {'ip': vm['ip'], 'floating_ip': vm['floating_ip']}
 
-    def get_traffic_rate(self, mac_address, floating_ip, ip):
+    def get_traffic_rate(self, mac_address, floating_ip, ip, nodes_root):
         """ Gets data traffic for <mac_address>. """
 
-        internal_traffic = self.get_internal_traffic_count(mac_address, ip)
-        external_traffic = self.get_external_traffic_count(floating_ip)
+        internal_traffic = self.get_internal_traffic_count(mac_address, ip, nodes_root)
+        external_traffic = self.get_external_traffic_count(floating_ip, nodes_root)
         current_time_ms = int(round(time.time() * 1000))
 
         # Subtract external source traffic from internal source traffic:
@@ -180,8 +179,9 @@ class Operational():
         if len(self.vm_cache) == 0:
             self.update_vm_list()
         data_rates = dict()
+        nodes_root = self.get_xml_root(self.nodes)
         for mac, vm in self.vm_cache.items():
-            data_rates[mac] = self.get_traffic_rate(mac, vm['floating_ip'], vm['ip'])
+            data_rates[mac] = self.get_traffic_rate(mac, vm['floating_ip'], vm['ip'], nodes_root)
         return data_rates
     
 
