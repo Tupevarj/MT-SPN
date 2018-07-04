@@ -132,9 +132,9 @@ class Operational():
         destination_flow = destination_flows[0]
 
         if len(destination_flows) > 1:
-            destination_flow = destination_flows[1] #self.get_highest_priority(destination_flows)
+            destination_flow = self.get_highest_priority(destination_flows)
         if len(source_flows) > 1:
-            source_flow = source_flows[1] # self.get_highest_priority(source_flows)
+            source_flow = self.get_highest_priority(source_flows)
 
         return {'ip': ip_address,
                 'sent_packets': int(source_flow.xpath(self.xpath['packet_count'], namespaces=self.ns)[0].text),
