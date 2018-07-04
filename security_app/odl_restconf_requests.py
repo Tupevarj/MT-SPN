@@ -36,6 +36,8 @@ class Operational():
         self.headers={'Accept':'text/xml'}
         self.ovsdb = 'http://' + ip + ':' + str(port) + '/restconf/operational/network-topology:network-topology/topology/ovsdb:1'
         self.nodes = 'http://' + ip + ':' + str(port) + '/restconf/operational/opendaylight-inventory:nodes'
+        self.vm_cache = dict()
+        self.traffic_cache = dict()
 
     def get_xml_root(self, url):
         req = requests.get(url, auth=self.auth, headers=self.headers,  stream=True)        
