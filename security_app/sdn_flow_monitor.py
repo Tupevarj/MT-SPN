@@ -53,8 +53,7 @@ class FlowMonitor:
             change_internal = self.empty_traffic(ip)
             change_external = self.empty_traffic(floating_ip)
 
-        self.traffic_cache[mac_address]['internal'] = internal_traffic
-        self.traffic_cache[mac_address]['external'] = external_traffic
+        self.traffic_cache[mac_address] = {'internal': internal_traffic, 'external': external_traffic}
         
         return {'internal': change_internal, 'external': change_external}
         
