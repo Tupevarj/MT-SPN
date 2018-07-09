@@ -188,7 +188,52 @@ class Operational():
             data_rates[mac] = self.get_traffic_rate(mac, vm['floating_ip'], vm['ip'], nodes_root)
         return data_rates
     
+    
+class Config:
+    ns = {
+        'n': 'urn:opendaylight:inventory',
+        'f': 'urn:opendaylight:flow:inventory',
+    }
 
+    def __init__(self, ip, port, user, password):
+        self.odl_ip = ip
+        self.odl_port = port
+        self.auth = HTTPBasicAuth(user, password)
+        self.headers = {'Content-Type': 'application/xml'}
+        self.nodes = 'http://' + ip + ':' + str(port) + '/restconf/config/opendaylight-inventory:nodes'
+
+    def push_flow(self, node, flow_body):
+        #if flow_body is None:
+            #return -1
+        # extracting id and table_id from flow body
+        xml_root = flow_body.getroot()
+        table = xml_root.xpath("//f:flow/f:table_id/text()", namespaces=self.ns)
+        flow = xml_root.xpath("//f:flow/f:id/text()", namespaces=self.ns)
+        # pushing flow
+        if len(table) > 0 and len(flow) > 0:
+            print('Pushing flow ' + flow[0] + ' to table ' + table[0] + ' of switch ' + node)
+            url = self.nodes + '/node/' + node + '/table/' + table[0] + '/flow/' + flow[0]
+            body = etree.tostring(flow_body)
+            r = requests.put(url=url, data=body, headers=self.headers, auth=self.auth)
+            if int(r.status_code) >= 200 and int(r.status_code) < 300:
+                code = 0
+            else:
+                code = 1
+                print((r.text))
+        else:
+            code = -1  #0
+        return code
+
+    @staticmethod
+    def read_flow(path):
+        try:
+            return etree.parse(path)
+        except IOError:
+            print "Could not find xml file: " + path
+        except etree.XMLSyntaxError as e:
+            print "XML syntax error: " + e
+
+    
 if __name__ == '__main__':
     op = Operational('130.234.169.76',8181,'admin','admin')
     tunnels = op.get_tunnels()
@@ -197,3 +242,7 @@ if __name__ == '__main__':
     vms = op.get_vms()
     for vm in vms:
         print(vm)
+        
+    # Just to test pushing flow:
+    co = Config('130.234.169.76', 8181, 'admin', 'admin')
+    co.push_flow('openflow:162982659204160', Config.read_flow("./test_flow.xml"))
